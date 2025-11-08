@@ -5,11 +5,11 @@ import (
 )
 
 type IHttpResponseDataMapper interface {
-	GetGenerateUrlCoreRes() *httpModel.GenerateUrlResPayload
+	GetGenerateUrlCoreRes(shortUrl string) *httpModel.GenerateUrlResPayload
 }
 
 type HttpResponseDataMapper struct{}
 
-func (dm *HttpRequestDataMapper) GetGenerateUrlCoreRes() *httpModel.GenerateUrlResPayload {
-	return &httpModel.GenerateUrlResPayload{}
+func (dm *HttpRequestDataMapper) GetGenerateUrlCoreRes(shortUrl string) *httpModel.GenerateUrlResPayload {
+	return &httpModel.GenerateUrlResPayload{ShortUrl: shortUrl}
 }
