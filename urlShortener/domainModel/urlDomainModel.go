@@ -8,8 +8,12 @@ import (
 	pq "github.com/lib/pq"
 )
 
-func GetUrlFilterString(longUrl string) string {
+func GetLongUrlFilterString(longUrl string) string {
 	return "long_url = '" + longUrl + "'"
+}
+
+func GetShortUrlFilterString(shortUrl string) string {
+	return "short_url = '" + shortUrl + "'"
 }
 
 func GetShortUrlFromUniqKey(key int64) string {

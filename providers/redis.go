@@ -25,6 +25,10 @@ func (r *RedisLib) Increment(ctx context.Context, key string) (int64, error) {
 	return r.client.Incr(ctx, key).Result()
 }
 
+func (r *RedisLib) Delete(ctx context.Context, key string) (int64, error) {
+	return r.client.Del(ctx, key).Result()
+}
+
 func InitRedis() *redis.Client {
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",

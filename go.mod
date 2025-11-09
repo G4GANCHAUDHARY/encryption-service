@@ -3,6 +3,8 @@ module github.com/G4GANCHAUDHARY/encryption-service
 go 1.25.3
 
 require (
+	github.com/go-ozzo/ozzo-validation/v4 v4.3.0
+	github.com/gorilla/mux v1.8.1
 	github.com/lib/pq v1.10.9
 	github.com/redis/go-redis/v9 v9.16.0
 	gorm.io/gorm v1.31.1

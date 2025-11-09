@@ -14,3 +14,10 @@ type Url struct {
 	IsCustomUrl    bool      `gorm:"is_custom_url"`
 	IsActive       bool      `gorm:"is_active"`
 }
+
+// UrlAnalytics : Having pgsql as time series db
+type UrlAnalytics struct {
+	gorm.Model
+	Date        string `gorm:"date"`
+	TotalClicks int    `gorm:"total_clicks"`
+}

@@ -1,12 +1,14 @@
 package dbObjectMapper
 
 import (
-	"github.com/G4GANCHAUDHARY/encryption-service/encryptor/models/coreModel"
-	"github.com/G4GANCHAUDHARY/encryption-service/encryptor/models/dbModel"
+	"github.com/G4GANCHAUDHARY/encryption-service/urlShortener/models/coreModel"
+	"github.com/G4GANCHAUDHARY/encryption-service/urlShortener/models/dbModel"
+	"time"
 )
 
 type IUrlMapper interface {
 	GetUrlModel(req coreModel.IGenerateUrlReq, shortCode string) *dbModel.Url
+	GetUpdateUrlModel(urlEntity *dbModel.Url) *dbModel.Url
 }
 
 type UrlMapper struct{}
@@ -22,5 +24,11 @@ func (um *UrlMapper) GetUrlModel(req coreModel.IGenerateUrlReq, shortCode string
 	} else {
 		urlEntity.ShortCode = shortCode
 	}
+	return urlEntity
+}
+
+func (um *UrlMapper) GetUpdateUrlModel(urlEntity *dbModel.Url) *dbModel.Url {
+	urlEntity.ClickCount++
+	urlEntity.LastAccessedAt = time.Now()
 	return urlEntity
 }
