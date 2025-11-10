@@ -10,10 +10,12 @@ type RedisLib struct {
 	client *redis.Client
 }
 
-func GetRedisClient(config AppConfig) *RedisLib {
+func GetRedisClient(config AppConfig, dbNumber int) *RedisLib {
 	rdb := redis.NewClient(&redis.Options{
-		Addr: config.RedisConfig.Address,
-		DB:   config.RedisConfig.DbNumber,
+		Addr:         config.RedisConfig.Address,
+		DB:           dbNumber,
+		MinIdleConns: config.RedisConfig.MinIdleConnections,
+		PoolSize:     config.RedisConfig.PoolSize,
 	})
 	return &RedisLib{client: rdb}
 }

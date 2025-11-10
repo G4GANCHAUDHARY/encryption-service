@@ -22,7 +22,7 @@ func (c *UrlExpiryCron) ExpireUrl() {
 	ctx = context.WithValue(ctx, "source", "cron")
 
 	// five-year old data
-	fiveYearsAgo := time.Now().AddDate(-5, 0, 0)
+	fiveYearsAgo := time.Now().UTC().AddDate(-5, 0, 0)
 
 	var oldActiveURLs []dbModel.Url
 	err = c.Db.Where("is_active = ? AND created_at < ?", true, fiveYearsAgo).Find(&oldActiveURLs).Error
@@ -39,9 +39,7 @@ func (c *UrlExpiryCron) ExpireUrl() {
 }
 
 func (c *UrlExpiryCron) StartDailyCron() {
-	// assuming indian timezone here
-	location, _ := time.LoadLocation("Asia/Kolkata")
-	c.cron = cron.New(cron.WithLocation(location))
+	c.cron = cron.New(cron.WithLocation(time.UTC))
 
 	// every 3AM :}
 	_, err := c.cron.AddFunc("0 3 * * *", func() {

@@ -19,28 +19,37 @@ type DBClient struct {
 }
 
 type PQDBInfo struct {
-	SchemaName    string
-	SingularTable bool
-	TimeZone      string
-	DBHost        string
-	DBPort        string
-	DBUser        string
-	DBPassword    string
-	DBName        string
+	SchemaName          string
+	SingularTable       bool
+	TimeZone            string
+	DBHost              string
+	DBPort              string
+	DBUser              string
+	DBPassword          string
+	DBName              string
+	DBMaxOpenConn       string
+	DBMaxIdleConn       string
+	DBConnectionTimeout string
 }
 
 func (dbClient *DBClient) GetDBInstance(config AppConfig) (*gorm.DB, error) {
 	if dbClient.db == nil {
 		port := strconv.Itoa(config.DbConfig.Port)
+		timeout := strconv.Itoa(config.DbConfig.Timeout)
+		maxOpenConn := strconv.Itoa(config.DbConfig.MaxOpenConn)
+		maxIdleConn := strconv.Itoa(config.DbConfig.MaxIdleConn)
 		pdbInfo := PQDBInfo{
-			SchemaName:    "url_shortener.",
-			SingularTable: true,
-			TimeZone:      "UTC",
-			DBHost:        config.DbConfig.Host,
-			DBPort:        port,
-			DBUser:        config.DbConfig.User,
-			DBPassword:    config.DbConfig.Password,
-			DBName:        config.DbConfig.Name,
+			SchemaName:          "url_shortener.",
+			SingularTable:       true,
+			TimeZone:            "UTC",
+			DBHost:              config.DbConfig.Host,
+			DBPort:              port,
+			DBUser:              config.DbConfig.User,
+			DBPassword:          config.DbConfig.Password,
+			DBName:              config.DbConfig.Name,
+			DBConnectionTimeout: timeout,
+			DBMaxOpenConn:       maxOpenConn,
+			DBMaxIdleConn:       maxIdleConn,
 		}
 		return GetGormSqlClient(&pdbInfo), nil
 	} else {

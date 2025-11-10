@@ -26,7 +26,8 @@ type IUrlShortenerCore interface {
 type UrlShortener struct {
 	Db               *gorm.DB
 	UrlRepository    repo.IUrlRepository
-	Redis            *providers.RedisLib
+	RedisCache       *providers.RedisLib
+	RedisCounter     *providers.RedisLib
 	HttpResMapper    httpDataMapper.IHttpResponseDataMapper
 	DbMapper         dbObjectMapper.IUrlMapper
 	UrlAnalyticsRepo repo.IUrlAnalyticsRepository
@@ -81,7 +82,7 @@ func (ue *UrlShortener) DecryptUrl(ctx context.Context, req coreModel.IGetUrlReq
 
 	// check if exist in redis -> if yes return
 	var longUrl string
-	longUrl, err = ue.Redis.Get(ctx, global.Url+req.GetShortCode())
+	longUrl, err = ue.RedisCache.Get(ctx, global.Url+req.GetShortCode())
 	if err == nil {
 		return ue.HttpResMapper.GetUrlCoreRes(longUrl), nil
 	}
@@ -121,7 +122,7 @@ func (ue *UrlShortener) ExpireUrls(ctx context.Context, shortCode string) error 
 	}
 
 	// delete from redis
-	if _, err = ue.Redis.Delete(ctx, global.Url+shortCode); err != nil {
+	if _, err = ue.RedisCache.Delete(ctx, global.Url+shortCode); err != nil {
 		return err
 	}
 
@@ -164,7 +165,7 @@ func (ue *UrlShortener) generateUrlAndSave(ctx context.Context, tx *gorm.DB, req
 
 func (ue *UrlShortener) getShortCodeForUrl(ctx context.Context) (string, error) {
 	// get unique key to create short code hash using redis-counter
-	uniqKey, err := ue.Redis.Increment(ctx, global.Counter)
+	uniqKey, err := ue.RedisCounter.Increment(ctx, global.Counter)
 	if err != nil {
 		return "", errors.New("redis-err while generating short url")
 	}
@@ -215,5 +216,5 @@ func (ue *UrlShortener) saveUrlMappingAnalytics(ctx context.Context, req coreMod
 	}
 
 	// save in cache
-	_ = ue.Redis.Set(ctx, global.Url+req.GetShortCode(), urlEntity.LongUrl)
+	_ = ue.RedisCache.Set(ctx, global.Url+req.GetShortCode(), urlEntity.LongUrl)
 }

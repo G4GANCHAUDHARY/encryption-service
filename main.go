@@ -31,17 +31,20 @@ func main() {
 		panic(err)
 	}
 
-	redis := providers.GetRedisClient(appConfig)
+	urlCache := providers.GetRedisClient(appConfig, 0)
+	redisCounter := providers.GetRedisClient(appConfig, 1)
+	rateLimitCache := providers.GetRedisClient(appConfig, 2)
 
 	apiRouter := mux.NewRouter()
 	http.Handle("/", apiRouter)
-	rateLimiter := providers.GetRateLimiter(redis)
+	rateLimiter := providers.GetRateLimiter(rateLimitCache)
 	handler := RateLimitMiddleware(rateLimiter, &appConfig)(apiRouter)
 
 	urlShortenerCore := &core.UrlShortener{
 		Db:               db,
 		UrlRepository:    &repo.UrlRepository{},
-		Redis:            redis,
+		RedisCache:       urlCache,
+		RedisCounter:     redisCounter,
 		HttpResMapper:    &httpDataMapper.HttpResponseDataMapper{Config: &appConfig},
 		DbMapper:         &dbObjectMapper.UrlMapper{},
 		UrlAnalyticsRepo: &repo.UrlAnalyticsRepository{},
@@ -78,10 +81,10 @@ func main() {
 		urlExpiryCron.StartDailyCron()
 	}()
 
-	gracefulShutdown(server, &dbClient, redis, urlExpiryCron)
+	gracefulShutdown(server, &dbClient, redisCounter, urlCache, rateLimitCache, urlExpiryCron)
 }
 
-func gracefulShutdown(server *http.Server, dbClient *providers.DBClient, redis *providers.RedisLib, urlExpiryCron *cron.UrlExpiryCron) {
+func gracefulShutdown(server *http.Server, dbClient *providers.DBClient, redisCounter *providers.RedisLib, urlCache *providers.RedisLib, rateLimitCache *providers.RedisLib, urlExpiryCron *cron.UrlExpiryCron) {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, os.Interrupt, syscall.SIGTERM)
 
@@ -101,8 +104,16 @@ func gracefulShutdown(server *http.Server, dbClient *providers.DBClient, redis *
 		log.Printf("Database close error: %v", err)
 	}
 
-	if err := redis.Close(); err != nil {
-		log.Printf("Redis close error: %v", err)
+	if err := redisCounter.Close(); err != nil {
+		log.Printf("RedisCache counter close error: %v", err)
+	}
+
+	if err := urlCache.Close(); err != nil {
+		log.Printf("url cache close error: %v", err)
+	}
+
+	if err := rateLimitCache.Close(); err != nil {
+		log.Printf("rate limit close error: %v", err)
 	}
 
 	log.Println("Graceful shutdown completed")
