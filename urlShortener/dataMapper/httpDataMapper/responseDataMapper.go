@@ -1,6 +1,7 @@
 package httpDataMapper
 
 import (
+	"github.com/G4GANCHAUDHARY/encryption-service/providers"
 	"github.com/G4GANCHAUDHARY/encryption-service/urlShortener/models/dbModel"
 	"github.com/G4GANCHAUDHARY/encryption-service/urlShortener/models/httpModel"
 )
@@ -11,10 +12,12 @@ type IHttpResponseDataMapper interface {
 	GetUrlListRes(urls *[]dbModel.Url) *httpModel.GetUrlListPayload
 }
 
-type HttpResponseDataMapper struct{}
+type HttpResponseDataMapper struct {
+	Config *providers.AppConfig
+}
 
 func (dm *HttpResponseDataMapper) GetGenerateUrlCoreRes(shortUrl string) *httpModel.GenerateUrlResPayload {
-	return &httpModel.GenerateUrlResPayload{ShortUrl: shortUrl}
+	return &httpModel.GenerateUrlResPayload{ShortUrl: dm.Config.App.BaseUrl + shortUrl}
 }
 
 func (dm *HttpResponseDataMapper) GetUrlCoreRes(longUrl string) *httpModel.GetUrlResPayload {

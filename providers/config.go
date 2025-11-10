@@ -9,6 +9,7 @@ import (
 type App struct {
 	Name    string `env:"APP_NAME"`
 	Version string `env:"APP_VERSION"`
+	BaseUrl string `env:"BASE_URL"`
 }
 
 type HttpConfig struct {
@@ -28,11 +29,17 @@ type DbConfig struct {
 	Name     string `env:"DB_NAME"`
 }
 
+type RateLimitConfig struct {
+	WriteCapacity int `env:"RL_WRITE_CAP"`
+	ReadCapacity  int `env:"RL_READ_CAP"`
+}
+
 type AppConfig struct {
-	App         App
-	DbConfig    DbConfig
-	HttpConfig  HttpConfig
-	RedisConfig RedisConfig
+	App             App
+	DbConfig        DbConfig
+	HttpConfig      HttpConfig
+	RedisConfig     RedisConfig
+	RateLimitConfig RateLimitConfig
 }
 
 var (

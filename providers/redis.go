@@ -3,6 +3,7 @@ package providers
 import (
 	"context"
 	redis "github.com/redis/go-redis/v9"
+	"time"
 )
 
 type RedisLib struct {
@@ -18,7 +19,6 @@ func GetRedisClient(config AppConfig) *RedisLib {
 }
 
 func (r *RedisLib) Close() error {
-	// Close Redis connection
 	if r.client != nil {
 		return r.client.Close()
 	}
@@ -39,4 +39,8 @@ func (r *RedisLib) Increment(ctx context.Context, key string) (int64, error) {
 
 func (r *RedisLib) Delete(ctx context.Context, key string) (int64, error) {
 	return r.client.Del(ctx, key).Result()
+}
+
+func (r *RedisLib) Expire(ctx context.Context, key string, expiration time.Duration) (bool, error) {
+	return r.client.Expire(ctx, key, expiration).Result()
 }

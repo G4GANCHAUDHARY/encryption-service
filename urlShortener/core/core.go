@@ -174,7 +174,7 @@ func (ue *UrlShortener) getShortCodeForUrl(ctx context.Context) (string, error) 
 
 func (ue *UrlShortener) handleCustomUrl(ctx context.Context, tx *gorm.DB, req coreModel.IGenerateUrlReq) (*httpModel.GenerateUrlResPayload, error) {
 	// save url mapping with short code as custom url itself
-	if _, err := ue.UrlRepository.Save(ctx, tx, ue.DbMapper.GetUrlModel(req, "")); err != nil {
+	if _, err := ue.UrlRepository.Save(ctx, tx, ue.DbMapper.GetUrlModel(req, req.GetCustomUrl())); err != nil {
 		return nil, err
 	}
 

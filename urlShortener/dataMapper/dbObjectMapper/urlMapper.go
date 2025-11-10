@@ -15,14 +15,10 @@ type UrlMapper struct{}
 
 func (um *UrlMapper) GetUrlModel(req coreModel.IGenerateUrlReq, shortCode string) *dbModel.Url {
 	urlEntity := &dbModel.Url{
+		ShortCode:   shortCode,
 		LongUrl:     req.GetLongUrl(),
 		IsCustomUrl: req.GetIsCustomUrl(),
 		IsActive:    true,
-	}
-	if req.GetIsCustomUrl() {
-		urlEntity.ShortCode = req.GetCustomUrl()
-	} else {
-		urlEntity.ShortCode = shortCode
 	}
 	return urlEntity
 }

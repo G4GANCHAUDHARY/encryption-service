@@ -11,6 +11,7 @@ import (
 	"github.com/G4GANCHAUDHARY/encryption-service/urlShortener/repo"
 	"github.com/gorilla/mux"
 	"log"
+	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -34,11 +35,14 @@ func main() {
 
 	apiRouter := mux.NewRouter()
 	http.Handle("/", apiRouter)
+	rateLimiter := providers.GetRateLimiter(redis)
+	handler := RateLimitMiddleware(rateLimiter, &appConfig)(apiRouter)
+
 	urlShortenerCore := &core.UrlShortener{
 		Db:               db,
 		UrlRepository:    &repo.UrlRepository{},
 		Redis:            redis,
-		HttpResMapper:    &httpDataMapper.HttpResponseDataMapper{},
+		HttpResMapper:    &httpDataMapper.HttpResponseDataMapper{Config: &appConfig},
 		DbMapper:         &dbObjectMapper.UrlMapper{},
 		UrlAnalyticsRepo: &repo.UrlAnalyticsRepository{},
 	}
@@ -52,7 +56,7 @@ func main() {
 
 	server := &http.Server{
 		Addr:         appConfig.HttpConfig.Address,
-		Handler:      apiRouter,
+		Handler:      handler,
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 1 * time.Second,
 	}
@@ -102,4 +106,31 @@ func gracefulShutdown(server *http.Server, dbClient *providers.DBClient, redis *
 	}
 
 	log.Println("Graceful shutdown completed")
+}
+
+func RateLimitMiddleware(rl *providers.RateLimiter, config *providers.AppConfig) mux.MiddlewareFunc {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ip := GetIP(r)
+			isAllowed := false
+			if r.Method == http.MethodPost {
+				isAllowed = rl.Allow(config.RateLimitConfig.WriteCapacity, r.Method+ip)
+			} else {
+				isAllowed = rl.Allow(config.RateLimitConfig.ReadCapacity, r.Method+ip)
+			}
+			if !isAllowed {
+				http.Error(w, "too many requests", http.StatusTooManyRequests)
+				return
+			}
+			next.ServeHTTP(w, r)
+		})
+	}
+}
+
+func GetIP(r *http.Request) string {
+	ip, _, err := net.SplitHostPort(r.RemoteAddr)
+	if err != nil {
+		return r.RemoteAddr
+	}
+	return ip
 }
