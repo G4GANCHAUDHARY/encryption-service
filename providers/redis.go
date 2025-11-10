@@ -9,8 +9,20 @@ type RedisLib struct {
 	client *redis.Client
 }
 
-func NewRedisWrapper() *RedisLib {
-	return &RedisLib{client: InitRedis()}
+func GetRedisClient(config AppConfig) *RedisLib {
+	rdb := redis.NewClient(&redis.Options{
+		Addr: config.RedisConfig.Address,
+		DB:   config.RedisConfig.DbNumber,
+	})
+	return &RedisLib{client: rdb}
+}
+
+func (r *RedisLib) Close() error {
+	// Close Redis connection
+	if r.client != nil {
+		return r.client.Close()
+	}
+	return nil
 }
 
 func (r *RedisLib) Set(ctx context.Context, key string, value string) error {
@@ -27,14 +39,4 @@ func (r *RedisLib) Increment(ctx context.Context, key string) (int64, error) {
 
 func (r *RedisLib) Delete(ctx context.Context, key string) (int64, error) {
 	return r.client.Del(ctx, key).Result()
-}
-
-func InitRedis() *redis.Client {
-	rdb := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // default DB
-	})
-
-	return rdb
 }

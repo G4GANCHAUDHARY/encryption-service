@@ -15,9 +15,11 @@ type Url struct {
 	IsActive       bool      `gorm:"is_active"`
 }
 
-// UrlAnalytics : Having pgsql as time series db
+// UrlAnalytics : Taking pgsql as time series db
 type UrlAnalytics struct {
-	gorm.Model
-	Date        string `gorm:"date"`
-	TotalClicks int    `gorm:"total_clicks"`
+	ID          uint      `gorm:"primarykey"`
+	CreatedAt   time.Time `gorm:"created_at"`
+	UpdatedAt   time.Time `gorm:"updated_at"`
+	Date        string    `gorm:"date"`
+	TotalClicks int       `gorm:"total_clicks"`
 }

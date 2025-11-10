@@ -32,8 +32,8 @@ func (u *UrlRepository) Get(ctx context.Context, tx *gorm.DB, filters string) (*
 
 func (u *UrlRepository) GetList(ctx context.Context, tx *gorm.DB, filtersString []string, sortObject utils.ISortObject, pagination utils.IPagination) (*[]dbModel.Url, error) {
 	var urls []dbModel.Url
-	tx = tx.Table("url.url")
-	tx = tx.Select("url.id as id, url.short_code as short_code, url.long_code as long_code, url.click_count as click_count, url.last_accessed_at as last_accessed_at, url.is_custom_url as is_custom_url")
+	tx = tx.Table("url_shortener.url")
+	tx = tx.Select("url.id as id, url.short_code as short_code, url.long_url as long_url, url.click_count as click_count, url.last_accessed_at as last_accessed_at, url.is_custom_url as is_custom_url")
 	for _, filter := range filtersString {
 		tx = tx.Where(filter)
 	}

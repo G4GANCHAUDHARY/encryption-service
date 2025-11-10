@@ -33,15 +33,20 @@ type UrlShortener struct {
 }
 
 // EncryptUrl : encrypts long url to short code
-func (ue *UrlShortener) EncryptUrl(ctx context.Context, req coreModel.IGenerateUrlReq) (*httpModel.GenerateUrlResPayload, error) {
+func (ue *UrlShortener) EncryptUrl(ctx context.Context, req coreModel.IGenerateUrlReq) (res *httpModel.GenerateUrlResPayload, err error) {
 	// check if already exist, if yes return short code
-	if existingUrl, err := ue.UrlRepository.Get(ctx, ue.Db, domainModel.GetLongUrlFilterString(req.GetLongUrl())); err != nil {
+	existingUrl, err := ue.UrlRepository.Get(ctx, ue.Db, domainModel.GetLongUrlFilterString(req.GetLongUrl()))
+	if err == nil {
 		return ue.HttpResMapper.GetGenerateUrlCoreRes(existingUrl.ShortCode), nil
 	}
 
 	// begin tx
 	tx := ue.Db.Begin()
-	defer tx.Rollback()
+	defer utils.HandlePanic(utils.HandlePanicRequest{
+		Tx:       tx,
+		FuncName: "EncryptUrl",
+		Err:      &err,
+	})
 
 	// handle custom url
 	if req.GetIsCustomUrl() {
@@ -65,8 +70,13 @@ func (ue *UrlShortener) EncryptUrl(ctx context.Context, req coreModel.IGenerateU
 // DecryptUrl : decrypts short code to long url
 func (ue *UrlShortener) DecryptUrl(ctx context.Context, req coreModel.IGetUrlReq) (res *httpModel.GetUrlResPayload, err error) {
 	// defer saving url mapping analytics data
+	var urlEntity *dbModel.Url
 	defer func() {
-		go ue.saveUrlMappingAnalytics(ctx, req, err)
+		if err == nil && urlEntity != nil {
+			go func(entity *dbModel.Url) {
+				ue.saveUrlMappingAnalytics(context.Background(), req, entity)
+			}(urlEntity)
+		}
 	}()
 
 	// check if exist in redis -> if yes return
@@ -77,7 +87,6 @@ func (ue *UrlShortener) DecryptUrl(ctx context.Context, req coreModel.IGetUrlReq
 	}
 
 	// check if exist in db -> if yes return
-	var urlEntity *dbModel.Url
 	urlEntity, err = ue.UrlRepository.Get(ctx, ue.Db, domainModel.GetShortUrlFilterString(req.GetShortCode()))
 	if err == nil {
 		return ue.HttpResMapper.GetUrlCoreRes(urlEntity.LongUrl), nil
@@ -94,7 +103,11 @@ func (ue *UrlShortener) ExpireUrls(ctx context.Context, shortCode string) error 
 	}
 
 	tx := ue.Db.Begin()
-	defer tx.Rollback()
+	defer utils.HandlePanic(utils.HandlePanicRequest{
+		Tx:       tx,
+		FuncName: "ExpireUrls",
+		Err:      &err,
+	})
 
 	// set is active false
 	urlEntity.IsActive = false
@@ -173,20 +186,14 @@ func (ue *UrlShortener) handleCustomUrl(ctx context.Context, tx *gorm.DB, req co
 	return ue.HttpResMapper.GetGenerateUrlCoreRes(req.GetCustomUrl()), nil
 }
 
-func (ue *UrlShortener) saveUrlMappingAnalytics(ctx context.Context, req coreModel.IGetUrlReq, err error) {
-	// if found some err during decrypt
-	if err != nil {
-		return
-	}
-
-	// get url entity
-	urlEntity, err := ue.UrlRepository.Get(ctx, ue.Db, domainModel.GetShortUrlFilterString(req.GetShortCode()))
-	if err != nil {
-		return
-	}
-
+func (ue *UrlShortener) saveUrlMappingAnalytics(ctx context.Context, req coreModel.IGetUrlReq, urlEntity *dbModel.Url) {
+	var err error
 	tx := ue.Db.Begin()
-	defer tx.Rollback()
+	defer utils.HandlePanic(utils.HandlePanicRequest{
+		Tx:       tx,
+		FuncName: "saveUrlMappingAnalytics",
+		Err:      &err,
+	})
 
 	// update url entity with click count and last accessed at
 	updatedUrlEntity := ue.DbMapper.GetUpdateUrlModel(urlEntity)

@@ -19,7 +19,7 @@ func (u *UrlAnalyticsRepository) SaveAnalytics(ctx context.Context, tx *gorm.DB)
 	return tx.Clauses(clause.OnConflict{
 		Columns: []clause.Column{{Name: "date"}},
 		DoUpdates: clause.Assignments(map[string]interface{}{
-			"total_clicks": gorm.Expr("total_clicks + EXCLUDED.total_clicks"),
+			"total_clicks": gorm.Expr("url_analytics.total_clicks + EXCLUDED.total_clicks"),
 		}),
 	}).Create(&dbModel.UrlAnalytics{
 		Date:        time.Now().Format("2006-01-02"),

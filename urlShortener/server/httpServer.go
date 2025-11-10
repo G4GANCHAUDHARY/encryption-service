@@ -19,9 +19,8 @@ type HttpServer struct {
 	HttpRequestDataMapper httpDataMapper.IHttpRequestDataMapper
 }
 
-func (h HttpServer) Init() error {
+func (h HttpServer) Init() {
 	h.registerRoutes()
-	return nil
 }
 
 func (h HttpServer) registerRoutes() {
@@ -40,7 +39,7 @@ func (h *HttpServer) UrlHandler(rw http.ResponseWriter, rq *http.Request) {
 
 	switch rq.Method {
 	case http.MethodPost:
-		var httpPayload httpModel.GenerateUrlReqPayload
+		var httpPayload *httpModel.GenerateUrlReqPayload
 		err := json.NewDecoder(rq.Body).Decode(&httpPayload)
 		if err != nil {
 			utils.HTTPFailWithXxx("bad request", http.StatusBadRequest, rw)
@@ -69,7 +68,7 @@ func (h *HttpServer) UrlHandler(rw http.ResponseWriter, rq *http.Request) {
 			cursor = global.DefaultCursor
 		}
 		orderBy, sortingOrder, err := utils.GetSortParams(rq)
-		filters := pq.StringArray{"url.is_active = false"}
+		filters := pq.StringArray{"url.is_active = true"}
 
 		coreRequest := h.HttpRequestDataMapper.GetUrlListCoreReq(pageSize, cursor, sortingOrder, filters, orderBy)
 		res, err := h.Core.GetUrls(ctx, coreRequest)

@@ -13,7 +13,7 @@ func GetLongUrlFilterString(longUrl string) string {
 }
 
 func GetShortUrlFilterString(shortUrl string) string {
-	return "short_url = '" + shortUrl + "'"
+	return "short_code = '" + shortUrl + "'"
 }
 
 func GetShortUrlFromUniqKey(key int64) string {

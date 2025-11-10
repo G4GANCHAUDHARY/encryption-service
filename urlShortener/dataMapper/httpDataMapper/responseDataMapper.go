@@ -13,16 +13,16 @@ type IHttpResponseDataMapper interface {
 
 type HttpResponseDataMapper struct{}
 
-func (dm *HttpRequestDataMapper) GetGenerateUrlCoreRes(shortUrl string) *httpModel.GenerateUrlResPayload {
+func (dm *HttpResponseDataMapper) GetGenerateUrlCoreRes(shortUrl string) *httpModel.GenerateUrlResPayload {
 	return &httpModel.GenerateUrlResPayload{ShortUrl: shortUrl}
 }
 
-func (dm *HttpRequestDataMapper) GetUrlCoreRes(longUrl string) *httpModel.GetUrlResPayload {
+func (dm *HttpResponseDataMapper) GetUrlCoreRes(longUrl string) *httpModel.GetUrlResPayload {
 	return &httpModel.GetUrlResPayload{LongUrl: longUrl}
 }
 
-func (dm *HttpRequestDataMapper) GetUrlListRes(urls *[]dbModel.Url) *httpModel.GetUrlListPayload {
-	var res *httpModel.GetUrlListPayload
+func (dm *HttpResponseDataMapper) GetUrlListRes(urls *[]dbModel.Url) *httpModel.GetUrlListPayload {
+	res := httpModel.GetUrlListPayload{}
 	for _, url := range *urls {
 		urlListObj := httpModel.Url{
 			Id:             int(url.ID),
@@ -34,5 +34,5 @@ func (dm *HttpRequestDataMapper) GetUrlListRes(urls *[]dbModel.Url) *httpModel.G
 		}
 		res.UrlList = append(res.UrlList, urlListObj)
 	}
-	return res
+	return &res
 }

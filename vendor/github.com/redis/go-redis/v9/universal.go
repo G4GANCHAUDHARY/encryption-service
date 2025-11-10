@@ -5,9 +5,6 @@ import (
 	"crypto/tls"
 	"net"
 	"time"
-
-	"github.com/redis/go-redis/v9/auth"
-	"github.com/redis/go-redis/v9/maintnotifications"
 )
 
 // UniversalOptions information is required by UniversalClient to establish
@@ -29,27 +26,8 @@ type UniversalOptions struct {
 	Dialer    func(ctx context.Context, network, addr string) (net.Conn, error)
 	OnConnect func(ctx context.Context, cn *Conn) error
 
-	Protocol int
-	Username string
-	Password string
-	// CredentialsProvider allows the username and password to be updated
-	// before reconnecting. It should return the current username and password.
-	CredentialsProvider func() (username string, password string)
-
-	// CredentialsProviderContext is an enhanced parameter of CredentialsProvider,
-	// done to maintain API compatibility. In the future,
-	// there might be a merge between CredentialsProviderContext and CredentialsProvider.
-	// There will be a conflict between them; if CredentialsProviderContext exists, we will ignore CredentialsProvider.
-	CredentialsProviderContext func(ctx context.Context) (username string, password string, err error)
-
-	// StreamingCredentialsProvider is used to retrieve the credentials
-	// for the connection from an external source. Those credentials may change
-	// during the connection lifetime. This is useful for managed identity
-	// scenarios where the credentials are retrieved from an external source.
-	//
-	// Currently, this is a placeholder for the future implementation.
-	StreamingCredentialsProvider auth.StreamingCredentialsProvider
-
+	Username         string
+	Password         string
 	SentinelUsername string
 	SentinelPassword string
 
@@ -62,20 +40,6 @@ type UniversalOptions struct {
 	WriteTimeout          time.Duration
 	ContextTimeoutEnabled bool
 
-	// ReadBufferSize is the size of the bufio.Reader buffer for each connection.
-	// Larger buffers can improve performance for commands that return large responses.
-	// Smaller buffers can improve memory usage for larger pools.
-	//
-	// default: 32KiB (32768 bytes)
-	ReadBufferSize int
-
-	// WriteBufferSize is the size of the bufio.Writer buffer for each connection.
-	// Larger buffers can improve performance for large pipelines and commands with many arguments.
-	// Smaller buffers can improve memory usage for larger pools.
-	//
-	// default: 32KiB (32768 bytes)
-	WriteBufferSize int
-
 	// PoolFIFO uses FIFO mode for each node connection pool GET/PUT (default LIFO).
 	PoolFIFO bool
 
@@ -83,7 +47,6 @@ type UniversalOptions struct {
 	PoolTimeout     time.Duration
 	MinIdleConns    int
 	MaxIdleConns    int
-	MaxActiveConns  int
 	ConnMaxIdleTime time.Duration
 	ConnMaxLifetime time.Duration
 
@@ -96,36 +59,10 @@ type UniversalOptions struct {
 	RouteByLatency bool
 	RouteRandomly  bool
 
-	// MasterName is the sentinel master name.
-	// Only for failover clients.
+	// The sentinel master name.
+	// Only failover clients.
+
 	MasterName string
-
-	// DisableIndentity - Disable set-lib on connect.
-	//
-	// default: false
-	//
-	// Deprecated: Use DisableIdentity instead.
-	DisableIndentity bool
-
-	// DisableIdentity is used to disable CLIENT SETINFO command on connect.
-	//
-	// default: false
-	DisableIdentity bool
-
-	IdentitySuffix string
-
-	// FailingTimeoutSeconds is the timeout in seconds for marking a cluster node as failing.
-	// When a node is marked as failing, it will be avoided for this duration.
-	// Only applies to cluster clients. Default is 15 seconds.
-	FailingTimeoutSeconds int
-
-	UnstableResp3 bool
-
-	// IsClusterMode can be used when only one Addrs is provided (e.g. Elasticache supports setting up cluster mode with configuration endpoint).
-	IsClusterMode bool
-
-	// MaintNotificationsConfig provides configuration for maintnotifications upgrades.
-	MaintNotificationsConfig *maintnotifications.Config
 }
 
 // Cluster returns cluster options created from the universal options.
@@ -140,12 +77,8 @@ func (o *UniversalOptions) Cluster() *ClusterOptions {
 		Dialer:     o.Dialer,
 		OnConnect:  o.OnConnect,
 
-		Protocol:                     o.Protocol,
-		Username:                     o.Username,
-		Password:                     o.Password,
-		CredentialsProvider:          o.CredentialsProvider,
-		CredentialsProviderContext:   o.CredentialsProviderContext,
-		StreamingCredentialsProvider: o.StreamingCredentialsProvider,
+		Username: o.Username,
+		Password: o.Password,
 
 		MaxRedirects:   o.MaxRedirects,
 		ReadOnly:       o.ReadOnly,
@@ -161,27 +94,16 @@ func (o *UniversalOptions) Cluster() *ClusterOptions {
 		WriteTimeout:          o.WriteTimeout,
 		ContextTimeoutEnabled: o.ContextTimeoutEnabled,
 
-		ReadBufferSize:  o.ReadBufferSize,
-		WriteBufferSize: o.WriteBufferSize,
-
 		PoolFIFO: o.PoolFIFO,
 
 		PoolSize:        o.PoolSize,
 		PoolTimeout:     o.PoolTimeout,
 		MinIdleConns:    o.MinIdleConns,
 		MaxIdleConns:    o.MaxIdleConns,
-		MaxActiveConns:  o.MaxActiveConns,
 		ConnMaxIdleTime: o.ConnMaxIdleTime,
 		ConnMaxLifetime: o.ConnMaxLifetime,
 
 		TLSConfig: o.TLSConfig,
-
-		DisableIdentity:          o.DisableIdentity,
-		DisableIndentity:         o.DisableIndentity,
-		IdentitySuffix:           o.IdentitySuffix,
-		FailingTimeoutSeconds:    o.FailingTimeoutSeconds,
-		UnstableResp3:            o.UnstableResp3,
-		MaintNotificationsConfig: o.MaintNotificationsConfig,
 	}
 }
 
@@ -199,19 +121,11 @@ func (o *UniversalOptions) Failover() *FailoverOptions {
 		Dialer:    o.Dialer,
 		OnConnect: o.OnConnect,
 
-		DB:                           o.DB,
-		Protocol:                     o.Protocol,
-		Username:                     o.Username,
-		Password:                     o.Password,
-		CredentialsProvider:          o.CredentialsProvider,
-		CredentialsProviderContext:   o.CredentialsProviderContext,
-		StreamingCredentialsProvider: o.StreamingCredentialsProvider,
-
+		DB:               o.DB,
+		Username:         o.Username,
+		Password:         o.Password,
 		SentinelUsername: o.SentinelUsername,
 		SentinelPassword: o.SentinelPassword,
-
-		RouteByLatency: o.RouteByLatency,
-		RouteRandomly:  o.RouteRandomly,
 
 		MaxRetries:      o.MaxRetries,
 		MinRetryBackoff: o.MinRetryBackoff,
@@ -222,27 +136,15 @@ func (o *UniversalOptions) Failover() *FailoverOptions {
 		WriteTimeout:          o.WriteTimeout,
 		ContextTimeoutEnabled: o.ContextTimeoutEnabled,
 
-		ReadBufferSize:  o.ReadBufferSize,
-		WriteBufferSize: o.WriteBufferSize,
-
 		PoolFIFO:        o.PoolFIFO,
 		PoolSize:        o.PoolSize,
 		PoolTimeout:     o.PoolTimeout,
 		MinIdleConns:    o.MinIdleConns,
 		MaxIdleConns:    o.MaxIdleConns,
-		MaxActiveConns:  o.MaxActiveConns,
 		ConnMaxIdleTime: o.ConnMaxIdleTime,
 		ConnMaxLifetime: o.ConnMaxLifetime,
 
 		TLSConfig: o.TLSConfig,
-
-		ReplicaOnly: o.ReadOnly,
-
-		DisableIdentity:  o.DisableIdentity,
-		DisableIndentity: o.DisableIndentity,
-		IdentitySuffix:   o.IdentitySuffix,
-		UnstableResp3:    o.UnstableResp3,
-		// Note: MaintNotificationsConfig not supported for FailoverOptions
 	}
 }
 
@@ -259,13 +161,9 @@ func (o *UniversalOptions) Simple() *Options {
 		Dialer:     o.Dialer,
 		OnConnect:  o.OnConnect,
 
-		DB:                           o.DB,
-		Protocol:                     o.Protocol,
-		Username:                     o.Username,
-		Password:                     o.Password,
-		CredentialsProvider:          o.CredentialsProvider,
-		CredentialsProviderContext:   o.CredentialsProviderContext,
-		StreamingCredentialsProvider: o.StreamingCredentialsProvider,
+		DB:       o.DB,
+		Username: o.Username,
+		Password: o.Password,
 
 		MaxRetries:      o.MaxRetries,
 		MinRetryBackoff: o.MinRetryBackoff,
@@ -276,25 +174,15 @@ func (o *UniversalOptions) Simple() *Options {
 		WriteTimeout:          o.WriteTimeout,
 		ContextTimeoutEnabled: o.ContextTimeoutEnabled,
 
-		ReadBufferSize:  o.ReadBufferSize,
-		WriteBufferSize: o.WriteBufferSize,
-
 		PoolFIFO:        o.PoolFIFO,
 		PoolSize:        o.PoolSize,
 		PoolTimeout:     o.PoolTimeout,
 		MinIdleConns:    o.MinIdleConns,
 		MaxIdleConns:    o.MaxIdleConns,
-		MaxActiveConns:  o.MaxActiveConns,
 		ConnMaxIdleTime: o.ConnMaxIdleTime,
 		ConnMaxLifetime: o.ConnMaxLifetime,
 
 		TLSConfig: o.TLSConfig,
-
-		DisableIdentity:          o.DisableIdentity,
-		DisableIndentity:         o.DisableIndentity,
-		IdentitySuffix:           o.IdentitySuffix,
-		UnstableResp3:            o.UnstableResp3,
-		MaintNotificationsConfig: o.MaintNotificationsConfig,
 	}
 }
 
@@ -326,26 +214,14 @@ var (
 // NewUniversalClient returns a new multi client. The type of the returned client depends
 // on the following conditions:
 //
-//  1. If the MasterName option is specified with RouteByLatency, RouteRandomly or IsClusterMode,
-//     a FailoverClusterClient is returned.
-//  2. If the MasterName option is specified without RouteByLatency, RouteRandomly or IsClusterMode,
-//     a sentinel-backed FailoverClient is returned.
-//  3. If the number of Addrs is two or more, or IsClusterMode option is specified,
-//     a ClusterClient is returned.
-//  4. Otherwise, a single-node Client is returned.
+// 1. If the MasterName option is specified, a sentinel-backed FailoverClient is returned.
+// 2. if the number of Addrs is two or more, a ClusterClient is returned.
+// 3. Otherwise, a single-node Client is returned.
 func NewUniversalClient(opts *UniversalOptions) UniversalClient {
-	if opts == nil {
-		panic("redis: NewUniversalClient nil options")
-	}
-
-	switch {
-	case opts.MasterName != "" && (opts.RouteByLatency || opts.RouteRandomly || opts.IsClusterMode):
-		return NewFailoverClusterClient(opts.Failover())
-	case opts.MasterName != "":
+	if opts.MasterName != "" {
 		return NewFailoverClient(opts.Failover())
-	case len(opts.Addrs) > 1 || opts.IsClusterMode:
+	} else if len(opts.Addrs) > 1 {
 		return NewClusterClient(opts.Cluster())
-	default:
-		return NewClient(opts.Simple())
 	}
+	return NewClient(opts.Simple())
 }

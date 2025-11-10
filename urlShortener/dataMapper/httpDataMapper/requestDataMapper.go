@@ -7,14 +7,14 @@ import (
 )
 
 type IHttpRequestDataMapper interface {
-	GetGenerateUrlCoreReq(reqPayload httpModel.GenerateUrlReqPayload) coreModel.IGenerateUrlReq
+	GetGenerateUrlCoreReq(reqPayload *httpModel.GenerateUrlReqPayload) coreModel.IGenerateUrlReq
 	GetUrlListCoreReq(pageSize int, cursor int, sortingOrder string, filters pq.StringArray, orderBy string) coreModel.IGetList
 	GetDecryptUrlCoreReq(shortCode string) coreModel.IGetUrlReq
 }
 
 type HttpRequestDataMapper struct{}
 
-func (dm *HttpRequestDataMapper) GetGenerateUrlCoreReq(reqPayload httpModel.GenerateUrlReqPayload) coreModel.IGenerateUrlReq {
+func (dm *HttpRequestDataMapper) GetGenerateUrlCoreReq(reqPayload *httpModel.GenerateUrlReqPayload) coreModel.IGenerateUrlReq {
 	return &coreModel.GenerateUrlReq{
 		LongUrl:     reqPayload.LongUrl,
 		CustomUrl:   reqPayload.CustomAlias,

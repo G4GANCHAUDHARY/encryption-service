@@ -9,5 +9,5 @@ type GenerateUrlReqPayload struct {
 }
 
 func (p *GenerateUrlReqPayload) Validate() error {
-	return validation.ValidateStruct(&p)
+	return validation.ValidateStruct(p)
 }

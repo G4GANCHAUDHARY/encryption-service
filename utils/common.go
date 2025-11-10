@@ -176,11 +176,3 @@ func GetSortParams(rq *http.Request) (string, string, error) {
 	}
 	return orderBy, orderType, nil
 }
-
-type PageInfo struct {
-	PageSize   int  `json:"page_size"`
-	PageNumber int  `json:"page_number"`
-	TotalPages int  `json:"total_pages"`
-	HasNext    bool `json:"has_next"`
-	Cursor     int  `json:"cursor"`
-}
