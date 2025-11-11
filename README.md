@@ -118,6 +118,7 @@ Design Decisions :
 6. SHA-1 as encryptor algorithm
 7. Max-retry for collisions - 3
 8. Rate limit algo - Token bucket
+9. DDD pattern for code structure
 
 --------------------
 Design Trade-Offs : 
