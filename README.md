@@ -117,6 +117,7 @@ Design Decisions :
 5. Redis cache memory : 50MB to handle sufficient read traffic more than 10k per day
 6. SHA-1 as encryptor algorithm
 7. Max-retry for collisions - 3
+8. Rate limit algo - Token bucket
 
 --------------------
 Design Trade-Offs : 
